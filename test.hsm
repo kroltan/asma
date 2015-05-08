@@ -1,0 +1,4 @@
+potato=3
+x=potato
+y=@potato
+goto YEY if x != 0
