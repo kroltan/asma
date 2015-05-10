@@ -1,4 +1,6 @@
 # Multiplication program
+# Algorithm implemented using loops, supports negative numbers
+# Always chooses number near to 0 as loop count, so it's quite fast
 # Inputs:
 #  R0 = First number
 #  R1 = Second number
@@ -8,8 +10,8 @@ START:
 	a = R0
 	b = R1
 
-	goto NA if a < 0
-	goto NB if b < 0
+	goto NA if a < 0 # check if a is closest to 0
+	goto NB if b < 0 # check if b is closest to 0
 	goto CONTINUE
 
 	NA:
@@ -20,7 +22,7 @@ START:
 	goto CHOOSE_A if temp-a > 0 else CHOOSE_B
 
 	CONTINUE:
-	goto CHOOSE_A if a-b < 0 else CHOOSE_B
+	goto CHOOSE_A if a-b < 0 else CHOOSE_B # when both positive, choose smallest
 
 	CHOOSE_A:
 		loopcount = b
@@ -37,6 +39,7 @@ START:
 		i = 0
 		result = 0
 		negative = 0
+		# make absolute for loopcount, so sign isn't checked every iteration
 		goto LOOP if loopcount > 0
 		loopcount = -loopcount
 		negative = 1

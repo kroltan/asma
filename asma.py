@@ -24,7 +24,7 @@ def bnf():
                  | Group("-" + value("negative_val"))
                  | value("val"))
 
-    command = variable_name("name") + Suppress("=") + operation("value")
+    command = value("name") + Suppress("=") + operation("value")
     goto = (Suppress("goto") + variable_name("target")
             + Optional(Suppress("if")
                        + operation("value") + comparsion("cmp")
@@ -51,46 +51,63 @@ def getvar(value, name=None):
 
 
 def process_command(stmt):
-
+    destination = getvar(stmt.name)
+    indirection = "A=M" if destination["kind"] is "A" else ""
     if stmt.op:
         variables = getvar(stmt.lhs, name="lhs")
         variables.update(getvar(stmt.rhs, name="rhs"))
+
         return asm("""
             @{lhs_address}
             D={lhs_kind}
             @{rhs_address}
             D={rhs_kind}{op}D
             @{name}
+            {ind}
             M=D
-        """, op=stmt.op, name=stmt.name, **variables)
+        """,
+                   ind=indirection,
+                   op=stmt.op,
+                   name=destination["address"],
+                   **variables)
     elif stmt.value.negative_val:
         val = getvar(stmt.value.negative_val)
-        if stmt.name == val["address"]:
+        if destination["address"] == val["address"]:
             return asm("""
-                @{address}
+                @{name}
+                {ind}
                 M=-{kind}
-            """, name=stmt.name, **val)
+            """, ind=indirection, name=destination["address"], **val)
         else:
             return asm("""
                 @{address}
                 D=-{kind}
                 @{name}
+                {ind}
                 M=D
-            """, name=stmt.name, **val)
+            """, ind=indirection, name=destination["address"], **val)
     else:
         val = getvar(stmt.value)
         if val["kind"] == "A" and val["address"] in ("1", "0", "-1"):
             return asm("""
                 @{name}
+                {ind}
                 M={val}
-            """, name=stmt.name, val=val["address"])
+            """,
+                       ind=indirection,
+                       name=destination["address"],
+                       val=val["address"])
         else:
             return asm("""
                 @{address}
                 D={kind}
                 @{name}
+                {ind}
                 M=D
-            """, name=stmt.name, **getvar(stmt.value))
+            """,
+                       ind=indirection,
+                       name=destination["address"],
+                       **getvar(stmt.value))
 
     return ""
 
